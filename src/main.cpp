@@ -92,12 +92,16 @@ void screen() {
         pros::delay(10);
     }
 }
+
+
  
 
 void initialize() {
 	chassis.calibrate();
 	chassis.setPose(0, 0, 0); // X: 0, Y: 0, Heading: 0
 	pros::Task screenTask(screen);
+	leftdrive.set_brake_modes(pros::E_MOTOR_BRAKE_HOLD);
+	rightdrive.set_brake_modes(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 
@@ -105,7 +109,6 @@ void disabled() {}
 
 
 void competition_initialize() {}
-
 
 
 //AUTONOMOUS FUNCTIONS--------------------------------------------------------
