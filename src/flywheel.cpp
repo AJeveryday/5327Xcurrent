@@ -9,12 +9,12 @@ velPID pid(0.35, 0.05, 0.045, 0.9);
 emaFilter rpmFilter(0.15);
 double motorSlew = 0.7;
 
-double targetRPM = 0;
+//double targetRPM = 0;
 double currentRPM = 0;
 double lastPower = 0;
 double motorPower = 0;
 
-void run_flywheel(){
+void run_flywheel(double targetRPM){
     while(true) {
   
         currentRPM = rpmFilter.filter(flywheel.get_actual_velocity() * flywheelRatio);
