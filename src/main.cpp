@@ -17,12 +17,6 @@ pros::Rotation rotl(4, false); // port 4, not reversed
 pros::Rotation rotr(5, true); // port 5, reversed
 pros::Rotation rotb(6); //port 6
 
-lemlib::TrackingWheel left_tracking_wheel(&rotl, 2.75, 4.3); // 2.75" wheel diameter, -4.6" offset from tracking center
-lemlib::TrackingWheel right_tracking_wheel(&rotr, 2.75, 4.3);
-lemlib::TrackingWheel back_tracking_wheel(&rotb, 2.75, 4.3);
-
-pros::Imu inertial_sensor(21); // port 21
-
 pros::Motor lb(-18);
 pros::Motor lm(-9);
 pros::Motor lf(-11);
@@ -33,11 +27,25 @@ pros::Motor rf(1);
 pros::MotorGroup leftdrive({lb, lm, lf});
 pros::MotorGroup rightdrive({rb,rm,rf});
 
+
+lemlib::TrackingWheel left_tracking_wheel(&rotl, 2.75, 4.3); // 2.75" wheel diameter, -4.6" offset from tracking center
+lemlib::TrackingWheel right_tracking_wheel(&rotr, 2.75, 4.3);
+lemlib::TrackingWheel back_tracking_wheel(&rotb, 2.75, 4.3);
+
+lemlib::TrackingWheel left_drive(&leftdrive, 4.125, 6.25, 600 );
+lemlib::TrackingWheel right_drive(&rightdrive, 4.125, 6.25, 600 );
+
+pros::Imu inertial_sensor(21); // port 21
+
+
 // odometry struct
 lemlib::OdomSensors_t sensors {
-    &left_tracking_wheel, // vertical tracking wheel 1
-    &right_tracking_wheel, // vertical tracking wheel 2
-    &back_tracking_wheel, // horizontal tracking wheel 1
+    //&left_tracking_wheel, // vertical tracking wheel 1
+    //&right_tracking_wheel, // vertical tracking wheel 2
+    //&back_tracking_wheel, // horizontal tracking wheel 1
+	&left_drive,
+	&right_drive,
+	nullptr,
     nullptr, // we don't have a second tracking wheel, so we set it to nullptr
     &inertial_sensor // inertial sensor
 };
@@ -102,7 +110,7 @@ void competition_initialize() {}
 
 //AUTONOMOUS FUNCTIONS--------------------------------------------------------
 void left_auton(){
-    
+    chassis.turnTo(-20, 32, 1500, true);
 }
 
 void right_auton(){
