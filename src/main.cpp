@@ -27,7 +27,7 @@ pros::Motor rf(1);
 pros::MotorGroup leftdrive({lb, lm, lf});
 pros::MotorGroup rightdrive({rb,rm,rf});
 
-
+//ODOMETRY GLOBALS
 lemlib::TrackingWheel left_tracking_wheel(&rotl, 2.75, 4.3); // 2.75" wheel diameter, -4.6" offset from tracking center
 lemlib::TrackingWheel right_tracking_wheel(&rotr, 2.75, 4.3);
 lemlib::TrackingWheel back_tracking_wheel(&rotb, 2.75, 4.3);
@@ -38,7 +38,7 @@ lemlib::TrackingWheel right_drive(&rightdrive, 4.125, 6.25, 600 );
 pros::Imu inertial_sensor(21); // port 21
 
 
-// odometry struct
+//ODOMETRY STRUCT
 lemlib::OdomSensors_t sensors {
     //&left_tracking_wheel, // vertical tracking wheel 1
     //&right_tracking_wheel, // vertical tracking wheel 2
@@ -49,7 +49,7 @@ lemlib::OdomSensors_t sensors {
     nullptr, // we don't have a second tracking wheel, so we set it to nullptr
     &inertial_sensor // inertial sensor
 };
-// forward/backward PID
+//FORWARD/BACKWARD PID
 lemlib::ChassisController_t lateralController {
     10, // kP
     30, // kD
@@ -60,7 +60,7 @@ lemlib::ChassisController_t lateralController {
     5 // slew rate
 };
  
-// turning PID
+//TURNING PID
 lemlib::ChassisController_t angularController {
     2, // kP
     10, // kD
@@ -70,6 +70,8 @@ lemlib::ChassisController_t angularController {
     500, // largeErrorTimeout
     5 // slew rate
 };
+
+//DRIVETRAIN
 lemlib::Drivetrain_t drivetrain {
     &leftdrive, // left drivetrain motors
     &rightdrive, // right drivetrain motors
@@ -77,6 +79,7 @@ lemlib::Drivetrain_t drivetrain {
     4.125, // wheel diameter
     360 // wheel rpm
 };
+
 //BASE
 extern lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
@@ -97,6 +100,7 @@ void screen() {
  
 
 void initialize() {
+	selector::init();
 	chassis.calibrate();
 	chassis.setPose(0, 0, 0); // X: 0, Y: 0, Heading: 0
 	pros::Task screenTask(screen);
@@ -105,12 +109,15 @@ void initialize() {
 }
 
 
-void disabled() {}
+void disabled() {
+	selector::init();
+}
 
 
-void competition_initialize() {}
+void competition_initialize() {
 
 
+}
 //AUTONOMOUS FUNCTIONS--------------------------------------------------------
 void left_auton(){
     chassis.turnTo(-20, 32, 1500, true);
@@ -125,7 +132,15 @@ void solo_awp(){
 }
 
 void autonomous() {
-	left_auton();
+	if(selector::auton == 1){
+		left_auton();
+	}
+	if(selector::auton == 2){
+		right_auton();
+	}
+	if(selector::auton == 3){
+		solo_awp();
+	}
 }
 
 

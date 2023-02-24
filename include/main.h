@@ -37,6 +37,7 @@
 #include "api.h"
 #include "lemlib/api.hpp"
 #include "flywheel.hpp"
+#include "autoSelect/selection.h"
 
 /**
  * You should add more #includes here
