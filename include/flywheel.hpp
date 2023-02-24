@@ -21,3 +21,5 @@ public:
   void setGains(double, double, double, double);
   double getError();
 };
+
+extern void run_flywheel(double target_RPM);

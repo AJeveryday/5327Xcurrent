@@ -131,8 +131,9 @@ void autonomous() {
 
 void opcontrol() {
 	double intake_mode;
+	run_flywheel(3600);
 	while(true){
-
+		
 		//drive tank
 		if(master.get_analog(ANALOG_LEFT_Y) < 10){
 			leftdrive.move(0);
