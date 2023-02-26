@@ -7,5 +7,5 @@
 Clone the repository using Github Desktop or type `git clone "https://github.com/AJeveryday/untestedcode.git" ` in your terminal. 
 Make sure to have GIT installed!
 
-### Thank You
+### Monekye
 
