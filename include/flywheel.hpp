@@ -1,4 +1,19 @@
+namespace flywheel {
 
+    #define FLYWHEEL_PORT 19
+    
+    #define LONG_RANGE_POWER 0.6666667
+    #define SHORT_RANGE_POWER 0.3333333
+    #define MAXIMUM_VOLTAGE 12000
+    #define TECHNICAL_FLYWHEEL_RPM 600
 
+    extern pros::Motor motor;
 
-extern void run_flywheel(double target_RPM);
+    extern int targetSpeed;
+    extern double actualSpeed;
+
+    int voltageUpdate();
+    void setTargetSpeed(double pwr);
+    void brake(bool mode);
+
+};

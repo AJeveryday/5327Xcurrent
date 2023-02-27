@@ -146,7 +146,7 @@ void autonomous() {
 
 void opcontrol() {
 	double intake_mode;
-	run_flywheel(3600);
+	flywheel::setTargetSpeed(0.8888888);
 	while(true){
 		
 		//drive tank
