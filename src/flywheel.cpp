@@ -3,8 +3,8 @@
 
 
 
-#define FLYWHEEL_GEARSET pros::E_MOTOR_GEARSET_06
-#define INTAKE_GEARSET pros::E_MOTOR_GEARSET_06
+
+#define FLYWHEEL_PORT 19
 namespace flywheel{
     
     okapi::Motor motor(FLYWHEEL_PORT);
@@ -15,7 +15,7 @@ namespace flywheel{
     int targetSpeed = 0;
     double actualSpeed = 0;
     
-    auto flywheel_read = okapi::EmaFilter(0.1);
+    auto flywheel_read = okapi::DemaFilter(0.1,0.1);
     
 
     int voltageUpdate() {
@@ -34,7 +34,6 @@ namespace flywheel{
 
     void setTargetSpeed(double pwr) {
         targetSpeed = TECHNICAL_FLYWHEEL_RPM * pwr;
-        if (targetSpeed > 0) brake(false);
         voltageUpdate();
     };
 

@@ -1,22 +1,14 @@
 #include "main.h"
 
-//DEFINES
-#define INTAKE_MOTOR 15
-#define FLYWHEEL_MOTOR 19
-#define EXPANSION_PIN 'A'
-#define LIMIT_PIN 'E'
-#define EXPANSION_BLOCKER 'C'
 
-//GLOBALS
-pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor intake(INTAKE_MOTOR, pros::E_MOTOR_GEARSET_18);
-pros::ADIDigitalOut expansion(EXPANSION_PIN, false);
-pros::ADIDigitalIn intake_limit(LIMIT_PIN);
-pros::ADIDigitalOut expansion_blocker(EXPANSION_BLOCKER, false);
+#include "autons.cpp"
+
+
+//BASE
+
 pros::Rotation rotl(4, false); // port 4, not reversed
 pros::Rotation rotr(5, true); // port 5, reversed
 pros::Rotation rotb(6); //port 6
-
 pros::Motor lb(-18);
 pros::Motor lm(-9);
 pros::Motor lf(-11);
@@ -83,9 +75,8 @@ lemlib::Drivetrain_t drivetrain {
 //BASE
 extern lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
-//----------------------------------------------------------------------------------------------------------------------------------------
-
-void screen() {
+//SCREEN VITALS
+extern void screen() {
     // loop forever
     while (true) {
         lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
@@ -95,9 +86,25 @@ void screen() {
         pros::delay(10);
     }
 }
+//BASE
+
+//DEFINES
+#define INTAKE_MOTOR 15
+#define EXPANSION_PIN 'A'
+#define LIMIT_PIN 'E'
+#define EXPANSION_BLOCKER 'C'
+
+//GLOBALS
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+pros::Motor intake(INTAKE_MOTOR, pros::E_MOTOR_GEARSET_18);
+pros::ADIDigitalOut expansion(EXPANSION_PIN, false);
+pros::ADIDigitalIn intake_limit(LIMIT_PIN);
+pros::ADIDigitalOut expansion_blocker(EXPANSION_BLOCKER, false);
 
 
- 
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------
 
 void initialize() {
 	selector::init();
@@ -109,27 +116,43 @@ void initialize() {
 }
 
 
+//AUTONOMOUS FUNCTIONS--------------------------------------------------------
+void left_auton(){
+    chassis.turnTo(-20, 32, 1500, true);
+
+}
+
+void right_auton(){
+	chassis.follow("intake2disksafter.txt",2, 15);
+}
+
+void solo_awp(){
+
+}
+
+
 void disabled() {
 	selector::init();
 }
 
 
 void competition_initialize() {
-
-
-}
-//AUTONOMOUS FUNCTIONS--------------------------------------------------------
-void left_auton(){
-    chassis.turnTo(-20, 32, 1500, true);
-}
-
-void right_auton(){
-
-}
-
-void solo_awp(){
+	if(selector::auton == 1){
+		left_auton();
+	}
+	if(selector::auton == 2){
+		right_auton();
+	}
+	if(selector::auton == 3){
+		solo_awp();
+	}
 
 }
+
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 void autonomous() {
 	if(selector::auton == 1){
@@ -143,29 +166,39 @@ void autonomous() {
 	}
 }
 
+//OP-CONTROL
 
 void opcontrol() {
 	double intake_mode;
+	auto time = pros::c::millis();
 	flywheel::setTargetSpeed(0.8888888);
 	while(true){
-		
+		auto analog_left = master.get_analog(ANALOG_LEFT_Y);
+		auto analog_right = master.get_analog(ANALOG_RIGHT_X);
+
+
 		//drive tank
-		if(master.get_analog(ANALOG_LEFT_Y) < 10){
+		if(analog_left < 10){
 			leftdrive.move(0);
 		}else{
 			leftdrive.move(master.get_analog(ANALOG_LEFT_Y));
 		}
-		if(master.get_analog(ANALOG_RIGHT_X) < 10){
+		if(analog_right < 10){
 			rightdrive.move(0);
 		}else{
 			rightdrive.move(master.get_analog(ANALOG_RIGHT_X));
 		}
 
 		//EXPANSION/EXPANSIONBLOCKER
-		if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
+		if(time == time + 12000000){
+			if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
 			expansion.set_value(true);
 			expansion_blocker.set_value(true);
+			}
 		}
+			
+		
+		
 		
 		//INTAKE/OUTTTAKE
 		if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){

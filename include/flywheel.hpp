@@ -1,3 +1,4 @@
+#include "okapi/api.hpp"
 namespace flywheel {
 
     #define FLYWHEEL_PORT 19
@@ -7,13 +8,12 @@ namespace flywheel {
     #define MAXIMUM_VOLTAGE 12000
     #define TECHNICAL_FLYWHEEL_RPM 600
 
-    extern pros::Motor motor;
+    extern okapi::Motor motor;
 
     extern int targetSpeed;
     extern double actualSpeed;
 
     int voltageUpdate();
     void setTargetSpeed(double pwr);
-    void brake(bool mode);
 
 };
