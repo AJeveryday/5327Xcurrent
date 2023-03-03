@@ -3,7 +3,30 @@
 
 
 //BASE
+Drive robotchassis (
+  // Left Chassis Ports (negative port will reverse it!)
+  {-11,-9,-18},
 
+  // Right Chassis Ports (negative port will reverse it!)
+  {1, 13, 14}
+
+  // IMU Port
+  ,21
+
+  // Tracking Wheel Diameter (Remember, 4" wheels are actually 4.125!)
+  ,4.125
+
+  // Ticks per Rotation of Encoder
+  ,600
+
+  // External Gear Ratio of Tracking Wheel (MUST BE DECIMAL)
+  // eg. if your drive is 84:36 where the 36t is sensored, your RATIO would be 2.333.
+  // eg. if your drive is 36:60 where the 60t is sensored, your RATIO would be 0.6.
+  ,2.333
+
+);
+
+//BASE
 pros::Rotation rotl(4, false); // port 4, not reversed
 pros::Rotation rotr(5, true); // port 5, reversed
 pros::Rotation rotb(6); //port 6
@@ -40,6 +63,14 @@ lemlib::OdomSensors_t sensors {
     &inertial_sensor // inertial sensor
 };
 //FORWARD/BACKWARD PID
+/*
+
+increase kP until the robot starts oscillating
+increase kD until the oscillation stops
+record kP and kD values
+repeat steps 2-4 until you can't stop the oscillation. At this point, use the last kP and kD values you recorded.
+
+*/
 lemlib::ChassisController_t lateralController {
     10, // kP
     30, // kD
@@ -67,7 +98,7 @@ lemlib::Drivetrain_t drivetrain {
     &rightdrive, // right drivetrain motors
     13, // track width
     4.125, // wheel diameter
-    360 // wheel rpm
+    600 // wheel rpm
 };
 
 //BASE
@@ -75,12 +106,14 @@ extern lemlib::Chassis chassis(drivetrain, lateralController, angularController,
 
 //SCREEN VITALS
 extern void screen() {
+	while(true){
 		pros::Controller master(pros::E_CONTROLLER_MASTER);
 		int battery_level = pros::battery::get_current();
 		double battery_temp = pros::battery::get_temperature();
 		double controller_battery = master.get_battery_level();
 		double imu_heading = inertial_sensor.get_heading();
 		double imu_status = inertial_sensor.get_status();
+		double radio_connectivity = master.is_connected();
         lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
         pros::lcd::print(0, "x: %f", pose.x); // print the x position
         pros::lcd::print(1, "y: %f", pose.y); // print the y position
@@ -90,8 +123,10 @@ extern void screen() {
 		pros::lcd::print(5, "controller-battery-level: %f", controller_battery);
 		pros::lcd::print(6, "imu-heading: %f", imu_heading);
 		pros::lcd::print(7, "imu-status: %f", imu_status);
+		pros::lcd::print(8, "controller is connected.", radio_connectivity);
         pros::delay(10);
-    
+		std::cout<<battery_level<<"battery_level";
+	}
 }
 
 
@@ -109,50 +144,64 @@ pros::ADIDigitalIn intake_limit(LIMIT_PIN);
 pros::ADIDigitalOut expansion_blocker(EXPANSION_BLOCKER, false);
 
 
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------
-
-void initialize() {
-	selector::init();
-	chassis.calibrate();
-	chassis.setPose(0, 0, 0); // X: 0, Y: 0, Heading: 0
-	pros::Task screenTask(screen);
-	leftdrive.set_brake_modes(pros::E_MOTOR_BRAKE_HOLD);
-	rightdrive.set_brake_modes(pros::E_MOTOR_BRAKE_HOLD);
-}
-
-
 //AUTONOMOUS FUNCTIONS--------------------------------------------------------
 void left_auton(){
-    chassis.turnTo(-20, 32, 1500, true);
+	pros::Task screenTask(screen);
+    chassis.turnTo(10, 10, 1500, true);
 
 }
 
 void right_auton(){
-	chassis.follow("intake2disksafter.txt",2, 15);
+	pros::Task screenTask(screen);
+	chassis.moveTo(10,10,400);
 }
 
 void solo_awp(){
 
 }
 
+//----------------------------------------------------------------------------------------------------------------------------------------
+
+void initialize() {
+
+	chassis.calibrate();
+	chassis.setPose(0, 0, 0); // X: 0, Y: 0, Heading: 0
+
+
+	robotchassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
+  	robotchassis.set_active_brake(0.2); // Sets the active brake kP. We recommend 0.1.
+  	robotchassis.set_curve_default(0.1, 0); // Defaults for curve. If using tank, only the first parameter is used. (Comment this line out if you have an SD card!)  
+
+  // These are already defaulted to these buttons, but you can change the left/right curve buttons here!
+  	robotchassis.set_left_curve_buttons (pros::E_CONTROLLER_DIGITAL_LEFT, pros::E_CONTROLLER_DIGITAL_RIGHT); // If using tank, only the left side is used. 
+  	robotchassis.set_right_curve_buttons(pros::E_CONTROLLER_DIGITAL_Y,    pros::E_CONTROLLER_DIGITAL_A);
+	ez::as::initialize();
+	ez::as::auton_selector.add_autons(
+    {
+      Auton("left autonomous", left_auton),
+	  Auton("right autonomous", right_auton),
+	  Auton("solo_awp", solo_awp),
+    });
+
+  
+}
+
+
+
+
 
 void disabled() {
-	selector::init();
+	ez::as::auton_selector.add_autons(
+    {
+      Auton("left autonomous", left_auton),
+	  Auton("right autonomous", right_auton),
+	  Auton("solo_awp", solo_awp),
+    });
 }
 
 
 void competition_initialize() {
-	if(selector::auton == 1){
-		left_auton();
-	}
-	if(selector::auton == 2){
-		right_auton();
-	}
-	if(selector::auton == 3){
-		solo_awp();
-	}
+	ez::as::auton_selector.call_selected_auton();
 
 }
 
@@ -162,15 +211,7 @@ void competition_initialize() {
 
 
 void autonomous() {
-	if(selector::auton == 1){
-		left_auton();
-	}
-	if(selector::auton == 2){
-		right_auton();
-	}
-	if(selector::auton == 3){
-		solo_awp();
-	}
+	ez::as::auton_selector.call_selected_auton();
 
 }
 
@@ -179,26 +220,12 @@ void autonomous() {
 void opcontrol() {
 	double intake_mode;
 	auto time = pros::c::millis();
-	flywheel::setTargetSpeed(0.8888888);
 	while(true){
+		lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
 
-		auto analog_left = master.get_analog(ANALOG_LEFT_Y);
-		auto analog_right = master.get_analog(ANALOG_RIGHT_X);
-
-		//drive tank
-		if(analog_left < 3){
-			leftdrive.move(0);
-		}else{
-			leftdrive.move(master.get_analog(ANALOG_LEFT_Y));
-		}
-		if(analog_right < 3){
-			rightdrive.move(0);
-		}else{
-			rightdrive.move(master.get_analog(ANALOG_RIGHT_X));
-		}
-
+		robotchassis.tank();
 		//EXPANSION/EXPANSIONBLOCKER
-		if(time == time + 12000000){
+		if(time == time + 10000){
 			if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
 			expansion.set_value(true);
 			expansion_blocker.set_value(true);
@@ -223,27 +250,30 @@ void opcontrol() {
 			intake.move_voltage(0);
 			
 		}
-
-		if(intake_limit.get_value() == true){
+		if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
+			intake.move_voltage(-12000);
+			pros::delay(200);
+			intake.move_voltage(0);
+			pros::delay(10);
+			intake.move_voltage(-12000);
+			pros::delay(200);
+			intake.move_voltage(0);
+			pros::delay(10);
+			intake.move_voltage(-12000);
+			pros::delay(200);
 			intake.move_voltage(0);
 		}
 
+		/* limit
+		if(intake_limit.get_value() == true){
+			intake.move_voltage(0);
+		}
+		*/
+
+
+
 		//LOGGING
-		int battery_level = pros::battery::get_current(); //battery level
-		double battery_temp = pros::battery::get_temperature(); //battery temp
-		double controller_battery = master.get_battery_level(); //controller battery
-		double imu_heading = inertial_sensor.get_heading(); //imu- heading, compare to odom heading
-		double imu_status = inertial_sensor.get_status(); //imu status
-        lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
-        master.print(0, 0,"odom x: %f", pose.x); // print the x position
-        master.print(1,0, "odom y: %f", pose.y); // print the y position
-        master.print(2,0, "odom heading: %f", pose.theta); // print the heading
-		pros::lcd::print(3, "battery level: %f", battery_level);
-		pros::lcd::print(4, "battery temp: %f", battery_temp);
-		pros::lcd::print(5, "controller-battery-level: %f", controller_battery);
-		pros::lcd::print(6, "imu-heading: %f", imu_heading);
-		pros::lcd::print(7, "imu-status: %f", imu_status);
-        pros::delay(10);
+		pros::Task screentask(screen);
 	}
 	
 }

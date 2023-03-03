@@ -38,7 +38,7 @@
 #include "lemlib/api.hpp"
 #include "flywheel.hpp"
 #include "autoSelect/selection.h"
-
+#include "EZ-Template/api.hpp"
 
 extern lemlib::Chassis chassis;
 /**

@@ -14,21 +14,22 @@ namespace flywheel{
 
     int targetSpeed = 0;
     double actualSpeed = 0;
-    
+    double finalVoltage;
     auto flywheel_read = okapi::DemaFilter(0.1,0.1);
     
 
     int voltageUpdate() {
-        
+
+       while(true){ 
         
         if (targetSpeed == 0)  {motor.moveVoltage(0); return 0; }
         auto actualSpeed = flywheel_read.filter(motor.getActualVelocity());
         int currentVoltage = actualSpeed * (MAXIMUM_VOLTAGE/TECHNICAL_FLYWHEEL_RPM);
         int convertedTarget = targetSpeed * (MAXIMUM_VOLTAGE/TECHNICAL_FLYWHEEL_RPM);
         int error = (convertedTarget - currentVoltage) * 0.5;
-        int finalVoltage = convertedTarget + error;
+        double finalVoltage = convertedTarget + error;
         motor.moveVoltage(finalVoltage);
-        
+       }
         return finalVoltage;
     };
 
