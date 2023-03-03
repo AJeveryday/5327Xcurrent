@@ -1,8 +1,6 @@
 #include "main.h"
 
 
-#include "autons.cpp"
-
 
 //BASE
 
@@ -77,16 +75,25 @@ extern lemlib::Chassis chassis(drivetrain, lateralController, angularController,
 
 //SCREEN VITALS
 extern void screen() {
-    // loop forever
-    while (true) {
+		pros::Controller master(pros::E_CONTROLLER_MASTER);
+		int battery_level = pros::battery::get_current();
+		double battery_temp = pros::battery::get_temperature();
+		double controller_battery = master.get_battery_level();
+		double imu_heading = inertial_sensor.get_heading();
+		double imu_status = inertial_sensor.get_status();
         lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
         pros::lcd::print(0, "x: %f", pose.x); // print the x position
         pros::lcd::print(1, "y: %f", pose.y); // print the y position
         pros::lcd::print(2, "heading: %f", pose.theta); // print the heading
+		pros::lcd::print(3, "battery level: %f", battery_level);
+		pros::lcd::print(4, "battery temp: %f", battery_temp);
+		pros::lcd::print(5, "controller-battery-level: %f", controller_battery);
+		pros::lcd::print(6, "imu-heading: %f", imu_heading);
+		pros::lcd::print(7, "imu-status: %f", imu_status);
         pros::delay(10);
-    }
+    
 }
-//BASE
+
 
 //DEFINES
 #define INTAKE_MOTOR 15
@@ -164,6 +171,7 @@ void autonomous() {
 	if(selector::auton == 3){
 		solo_awp();
 	}
+
 }
 
 //OP-CONTROL
@@ -173,17 +181,17 @@ void opcontrol() {
 	auto time = pros::c::millis();
 	flywheel::setTargetSpeed(0.8888888);
 	while(true){
+
 		auto analog_left = master.get_analog(ANALOG_LEFT_Y);
 		auto analog_right = master.get_analog(ANALOG_RIGHT_X);
 
-
 		//drive tank
-		if(analog_left < 10){
+		if(analog_left < 3){
 			leftdrive.move(0);
 		}else{
 			leftdrive.move(master.get_analog(ANALOG_LEFT_Y));
 		}
-		if(analog_right < 10){
+		if(analog_right < 3){
 			rightdrive.move(0);
 		}else{
 			rightdrive.move(master.get_analog(ANALOG_RIGHT_X));
@@ -219,6 +227,23 @@ void opcontrol() {
 		if(intake_limit.get_value() == true){
 			intake.move_voltage(0);
 		}
+
+		//LOGGING
+		int battery_level = pros::battery::get_current(); //battery level
+		double battery_temp = pros::battery::get_temperature(); //battery temp
+		double controller_battery = master.get_battery_level(); //controller battery
+		double imu_heading = inertial_sensor.get_heading(); //imu- heading, compare to odom heading
+		double imu_status = inertial_sensor.get_status(); //imu status
+        lemlib::Pose pose = chassis.getPose(); // get the current position of the robot
+        master.print(0, 0,"odom x: %f", pose.x); // print the x position
+        master.print(1,0, "odom y: %f", pose.y); // print the y position
+        master.print(2,0, "odom heading: %f", pose.theta); // print the heading
+		pros::lcd::print(3, "battery level: %f", battery_level);
+		pros::lcd::print(4, "battery temp: %f", battery_temp);
+		pros::lcd::print(5, "controller-battery-level: %f", controller_battery);
+		pros::lcd::print(6, "imu-heading: %f", imu_heading);
+		pros::lcd::print(7, "imu-status: %f", imu_status);
+        pros::delay(10);
 	}
 	
 }
