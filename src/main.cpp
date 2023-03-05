@@ -45,8 +45,8 @@ lemlib::TrackingWheel left_tracking_wheel(&rotl, 2.75, 4.3); // 2.75" wheel diam
 lemlib::TrackingWheel right_tracking_wheel(&rotr, 2.75, 4.3);
 lemlib::TrackingWheel back_tracking_wheel(&rotb, 2.75, 4.3);
 
-lemlib::TrackingWheel left_drive(&leftdrive, 4.125, 6.25, 600 );
-lemlib::TrackingWheel right_drive(&rightdrive, 4.125, 6.25, 600 );
+lemlib::TrackingWheel left_drive(&leftdrive, 4.125, 13, 600 );
+lemlib::TrackingWheel right_drive(&rightdrive, 4.125, 13, 600 );
 
 pros::Imu inertial_sensor(21); // port 21
 
@@ -62,6 +62,7 @@ lemlib::OdomSensors_t sensors {
     nullptr, // we don't have a second tracking wheel, so we set it to nullptr
     &inertial_sensor // inertial sensor
 };
+
 //FORWARD/BACKWARD PID
 /*
 
@@ -102,7 +103,7 @@ lemlib::Drivetrain_t drivetrain {
 };
 
 //BASE
-extern lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
+extern lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);//sensors
 
 //SCREEN VITALS
 extern void screen() {
